@@ -28,7 +28,7 @@ When the binary is present, the script:
 4. Calls `start` with that config and an empty deployment string.
 5. Reads `get_cryptarchia_info`.
 
-A success line includes the real mode, height, and slot. `Bootstrapping` counts as running. A failure shows the command error. The panel never pretends the node is up.
+A success line is one plain sentence, such as “The node is online. Block height 41076, slot 1581336.” A failure is one sentence saying the node did not start. The bubble never shows the raw reply.
 
 Keys and config stay in `data/logos-node` (gitignored). The script does not print them.
 
@@ -36,11 +36,11 @@ Keys and config stay in `data/logos-node` (gitignored). The script does not prin
 
 Inside Basecamp, `assistant/Main.qml` calls the same three methods on `blockchain_module` through `logos.callModule`. Package it with Nix from `assistant/` (`nix build`, module builder 0.3.0). That build is not run here.
 
-The published package is `corner_assistant` 0.1.7. It is QML only, so `main` is empty and the same files are in the portable `linux-amd64` and `darwin-arm64` variants. There is no native plugin. Install it in Basecamp from:
+The published package is `corner_assistant` 0.1.8. It is QML only, so `main` is empty and the same files are in the portable `linux-amd64` and `darwin-arm64` variants. There is no native plugin. Install it in Basecamp from:
 
 https://github.com/uNexpectedR/loggy/releases/download/corner_assistant-v0.1.0/logos-repo.json
 
-That catalogue lists 0.1.7. The package file is on the `corner_assistant-v0.1.7` release. Refresh the repository, then install Corner assistant 0.1.7.
+That catalogue lists 0.1.8. The package file is on the `corner_assistant-v0.1.8` release. Refresh the repository, then install Corner assistant 0.1.8.
 
 ## Real and stubbed
 

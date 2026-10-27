@@ -1,6 +1,5 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
 // The photo is shown as-is. Its gray is #5b5b5b, which does not match
@@ -14,6 +13,7 @@ Item {
     property string detail: ""
     property bool busy: false
     property bool done: false
+    property bool failed: false
     property bool open: true
     property bool userMoved: false
     property real posRight: 0
@@ -154,28 +154,29 @@ Item {
             Rectangle {
                 id: bubble
                 visible: root.open
+                clip: true
                 radius: 16
                 color: "#fffaf3"
                 border.color: "#e4ddd2"
                 border.width: 1
                 width: visible ? 248 : 0
                 height: visible ? column.implicitHeight + 28 : 0
-                ColumnLayout {
+                Column {
                     id: column
                     x: 14
                     y: 14
                     width: 220
                     spacing: 8
                     Text {
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
+                        width: column.width
+                        wrapMode: Text.Wrap
                         text: root.speech
                         color: "#221f1a"
                         font.pixelSize: 15
                     }
                     Text {
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
+                        width: column.width
+                        wrapMode: Text.Wrap
                         visible: text !== ""
                         text: root.detail
                         color: "#5c564c"
@@ -184,7 +185,7 @@ Item {
                     Button {
                         visible: !root.done
                         enabled: !root.busy
-                        text: root.detail === "" ? "Run a node" : "Try again"
+                        text: root.failed ? "Try again" : "Run a node"
                         onClicked: root.runNode()
                     }
                 }
@@ -192,24 +193,112 @@ Item {
         }
     }
 
+    function quotedValue(text, name) {
+        var mark = '"' + name + '"'
+        var at = text.indexOf(mark)
+        if (at < 0)
+            return ""
+        var rest = text.slice(at + mark.length)
+        var colon = rest.indexOf(":")
+        if (colon < 0)
+            return ""
+        rest = rest.slice(colon + 1)
+        var i = 0
+        while (i < rest.length && " \n\t\r".indexOf(rest.charAt(i)) !== -1)
+            i++
+        rest = rest.slice(i)
+        if (rest.charAt(0) !== '"')
+            return ""
+        var end = rest.indexOf('"', 1)
+        if (end < 1)
+            return ""
+        return rest.slice(1, end)
+    }
+
+    function numberValue(text, name) {
+        var mark = '"' + name + '"'
+        var at = text.indexOf(mark)
+        if (at < 0)
+            return ""
+        var rest = text.slice(at + mark.length)
+        var colon = rest.indexOf(":")
+        if (colon < 0)
+            return ""
+        rest = rest.slice(colon + 1)
+        var i = 0
+        while (i < rest.length && " \n\t\r".indexOf(rest.charAt(i)) !== -1)
+            i++
+        var num = ""
+        if (rest.charAt(i) === "-") {
+            num = "-"
+            i++
+        }
+        var start = i
+        while (i < rest.length && rest.charAt(i) >= "0" && rest.charAt(i) <= "9")
+            i++
+        if (i === start)
+            return ""
+        return num + rest.slice(start, i)
+    }
+
     function chainRunning(text) {
-        return text.indexOf("height") !== -1 || text.indexOf("Bootstrapping") !== -1 || text.indexOf("Online") !== -1
+        return numberValue(text, "height") !== "" || text.indexOf("Bootstrapping") !== -1 || text.indexOf("Online") !== -1
+    }
+
+    function statusSentence(info) {
+        var mode = quotedValue(info, "mode").toLowerCase()
+        var height = numberValue(info, "height")
+        var slot = numberValue(info, "slot")
+        var lead = "The node is running."
+        if (mode.indexOf("online") !== -1)
+            lead = "The node is online."
+        else if (mode.indexOf("bootstrap") !== -1)
+            lead = "The node is bootstrapping."
+        if (height === "" && slot === "")
+            return lead
+        var tail = ""
+        if (height !== "")
+            tail = " Block height " + height
+        if (slot !== "")
+            tail += (height !== "" ? ", slot " : " Slot ") + slot
+        return lead + tail + "."
+    }
+
+    function plainFailure(text) {
+        var lower = String(text).toLowerCase()
+        if (lower.indexOf("timeout") !== -1)
+            return "The node did not start. The node module took too long to answer."
+        if (lower.indexOf("not found") !== -1 || lower.indexOf("unavailable") !== -1)
+            return "The node did not start. The blockchain module is not available."
+        if (lower.indexOf("config") !== -1)
+            return "The node did not start. The node configuration could not be written."
+        return "The node did not start. The node module did not report a running chain."
     }
 
     function finish(info) {
-        root.detail = info.slice(0, 600)
-        root.speech = "The node is running. Later tasks will be added."
+        root.speech = statusSentence(info)
+        root.detail = ""
         root.done = true
+        root.failed = false
+        root.busy = false
+    }
+
+    function fail(text) {
+        root.speech = plainFailure(text)
+        root.detail = ""
+        root.done = false
+        root.failed = true
         root.busy = false
     }
 
     function runNode() {
         root.busy = true
+        root.failed = false
         root.speech = "Running the node…"
         root.detail = ""
         if (typeof logos === "undefined") {
-            root.speech = "The node did not start."
-            root.detail = "No logos bridge. Load this module in Basecamp, or use the preview server."
+            root.speech = "The node did not start. This view is not connected to Basecamp."
+            root.failed = true
             root.busy = false
             return
         }
@@ -220,18 +309,15 @@ Item {
                 return
             }
             logos.callModule("blockchain_module", "generate_user_config", [peers])
-            var started = String(logos.callModule("blockchain_module", "start", ["user_config.yaml", ""]))
+            logos.callModule("blockchain_module", "start", ["user_config.yaml", ""])
             info = String(logos.callModule("blockchain_module", "get_cryptarchia_info", []))
             if (chainRunning(info)) {
                 finish(info)
                 return
             }
-            root.speech = "The node did not start."
-            root.detail = (started + "\n" + info).slice(0, 600)
+            fail(info)
         } catch (error) {
-            root.speech = "The node did not start."
-            root.detail = String(error).slice(0, 600)
+            fail(error)
         }
-        root.busy = false
     }
 }
