@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FILES = {
     "/": ROOT / "preview" / "public" / "index.html",
     "/index.html": ROOT / "preview" / "public" / "index.html",
-    "/lambda.svg": ROOT / "assistant" / "lambda.svg",
+    "/lambda.png": ROOT / "assistant" / "lambda.png",
 }
 PORT = 47291
 LOCK = threading.Lock()
@@ -28,7 +28,12 @@ class Handler(BaseHTTPRequestHandler):
             self.send_error(404)
             return
         body = file.read_bytes()
-        kind = "image/svg+xml" if file.suffix == ".svg" else "text/html; charset=utf-8"
+        if file.suffix == ".png":
+            kind = "image/png"
+        elif file.suffix == ".svg":
+            kind = "image/svg+xml"
+        else:
+            kind = "text/html; charset=utf-8"
         self._bytes(200, kind, body)
 
     def do_POST(self):

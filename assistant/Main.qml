@@ -3,9 +3,12 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
-// Drawn inside the content view. A separate window never appeared, and
-// clearing this view to transparent paints black on macOS. The default
-// clear is white. Use Basecamp's own content color and paint nothing else.
+// The photo is the character. Nothing is drawn behind it.
+// This view is a QQuickWidget inside the Basecamp dock, not a cocoa window.
+// FramelessWindowHint + NoDropShadowWindowHint + a clear color is what makes a
+// real NSWindow translucent. On this widget a clear color composites as black
+// (0.1.2) and Qt.Tool hid the child window. A solid clear is the full page, so
+// the page matches the shell (#171717) and the root item is not filled.
 Item {
     id: root
     anchors.fill: parent
@@ -23,8 +26,10 @@ Item {
 
     function matchShell() {
         var host = root.Window.window
-        if (host)
-            host.color = "#171717"
+        if (!host)
+            return
+        // Opaque shell color. A clear color on this widget is a black page.
+        host.color = "#171717"
     }
 
     function place() {
@@ -64,17 +69,39 @@ Item {
 
             Item {
                 id: faceBox
-                width: 150
-                height: 196
+                width: 168
+                height: 214
+                property real hop: 0
+
+                SequentialAnimation on hop {
+                    loops: Animation.Infinite
+                    running: !drag.pressed
+                    NumberAnimation {
+                        to: 6
+                        duration: 800
+                        easing.type: Easing.InOutSine
+                    }
+                    NumberAnimation {
+                        to: 0
+                        duration: 800
+                        easing.type: Easing.InOutSine
+                    }
+                    PauseAnimation { duration: 1800 }
+                }
+
                 Image {
                     id: face
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    width: 140
-                    height: 180
-                    source: "lambda.svg"
+                    anchors.bottomMargin: faceBox.hop
+                    width: 168
+                    height: 198
+                    source: "lambda.png"
                     fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    mipmap: true
                     MouseArea {
+                        id: drag
                         anchors.fill: parent
                         hoverEnabled: true
                         preventStealing: true
@@ -128,13 +155,13 @@ Item {
                 color: "#fffaf3"
                 border.color: "#e4ddd2"
                 border.width: 1
-                width: visible ? 260 : 0
+                width: visible ? 248 : 0
                 height: visible ? column.implicitHeight + 28 : 0
                 ColumnLayout {
                     id: column
                     x: 14
                     y: 14
-                    width: 232
+                    width: 220
                     spacing: 8
                     Text {
                         Layout.fillWidth: true
