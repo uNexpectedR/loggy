@@ -72,8 +72,8 @@ Item {
 
             Item {
                 id: faceBox
-                width: 326
-                height: 388
+                width: 164
+                height: 198
                 property real hop: 0
 
                 SequentialAnimation on hop {
@@ -97,8 +97,8 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: faceBox.hop
-                    width: 326
-                    height: 380
+                    width: 164
+                    height: 192
                     source: "lambda.png"
                     fillMode: Image.PreserveAspectFit
                     smooth: true
