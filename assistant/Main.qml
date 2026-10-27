@@ -3,9 +3,9 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
-// The photo is the character, at the camera's resolution. Nothing is drawn
-// behind it. A clear color on this QQuickWidget paints black, so the window
-// clear is Basecamp's content color and the root item is not filled.
+// The photo is shown as-is. Its gray is #5b5b5b, which does not match
+// Basecamp's #171717, so the window clear is the photo's gray. The root item
+// is not filled and no pixels are removed from the picture.
 Item {
     id: root
     anchors.fill: parent
@@ -24,14 +24,14 @@ Item {
     function matchShell() {
         var host = root.Window.window
         if (host)
-            host.color = "#171717"
+            host.color = "#5b5b5b"
     }
 
-    // Keep the clear on the shell color. Do not put a rectangle behind the photo.
+    // Page matches the photo's gray. Do not put a rectangle behind the picture.
     Binding {
         target: root.Window.window
         property: "color"
-        value: "#171717"
+        value: "#5b5b5b"
         when: root.Window.window !== null
     }
 
@@ -73,7 +73,7 @@ Item {
             Item {
                 id: faceBox
                 width: 164
-                height: 198
+                height: 227
                 property real hop: 0
 
                 SequentialAnimation on hop {
@@ -98,8 +98,8 @@ Item {
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: faceBox.hop
                     width: 164
-                    height: 192
-                    source: "lambda.png"
+                    height: 219
+                    source: "lambda-full.jpg"
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                     mipmap: true

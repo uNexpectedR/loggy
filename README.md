@@ -36,11 +36,11 @@ Keys and config stay in `data/logos-node` (gitignored). The script does not prin
 
 Inside Basecamp, `assistant/Main.qml` calls the same three methods on `blockchain_module` through `logos.callModule`. Package it with Nix from `assistant/` (`nix build`, module builder 0.3.0). That build is not run here.
 
-The published package is `corner_assistant` 0.1.6. It is QML only, so `main` is empty and the same files are in the portable `linux-amd64` and `darwin-arm64` variants. There is no native plugin. Install it in Basecamp from:
+The published package is `corner_assistant` 0.1.7. It is QML only, so `main` is empty and the same files are in the portable `linux-amd64` and `darwin-arm64` variants. There is no native plugin. Install it in Basecamp from:
 
 https://github.com/uNexpectedR/loggy/releases/download/corner_assistant-v0.1.0/logos-repo.json
 
-That catalogue lists 0.1.6. The package file is on the `corner_assistant-v0.1.6` release. Refresh the repository, then install Corner assistant 0.1.6.
+That catalogue lists 0.1.7. The package file is on the `corner_assistant-v0.1.7` release. Refresh the repository, then install Corner assistant 0.1.7.
 
 ## Real and stubbed
 
@@ -48,4 +48,4 @@ Real: the `ui_qml` module, the `logos.callModule` methods, and the preview's `lo
 
 Stubbed: the browser shell is not the Basecamp app. The character is the reference photo at its original resolution, with only the beige wall removed. It bobs a few pixels. In Basecamp it is drawn in the content area. Drag it; the place lasts until the module is closed. Only the character and the bubble take clicks.
 
-A real cocoa window is translucent with `FramelessWindowHint`, `NoDropShadowWindowHint`, and a clear color. This module is a `QQuickWidget` in the dock. Clearing that widget paints black, which is what 0.1.2 did, and `Qt.Tool` kept the child window offscreen. The root item is not filled. The page uses Basecamp's content color (`#171717`) so it is not a white page, and the photo has no backdrop. The preview is where the rest of the window stays usable.
+A real cocoa window is translucent with `FramelessWindowHint`, `NoDropShadowWindowHint`, and a clear color. This module is a `QQuickWidget` in the dock. Clearing that widget paints black, which is what 0.1.2 did, and `Qt.Tool` kept the child window offscreen. The root item is not filled. The page uses the photo's own gray (`#5b5b5b`) so the picture blends into it. The photo is not cut out. The preview is where the rest of the window stays usable.

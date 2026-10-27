@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FILES = {
     "/": ROOT / "preview" / "public" / "index.html",
     "/index.html": ROOT / "preview" / "public" / "index.html",
-    "/lambda.png": ROOT / "assistant" / "lambda.png",
+    "/lambda-full.jpg": ROOT / "assistant" / "lambda-full.jpg",
 }
 PORT = 47291
 LOCK = threading.Lock()
@@ -30,6 +30,8 @@ class Handler(BaseHTTPRequestHandler):
         body = file.read_bytes()
         if file.suffix == ".png":
             kind = "image/png"
+        elif file.suffix in (".jpg", ".jpeg"):
+            kind = "image/jpeg"
         elif file.suffix == ".svg":
             kind = "image/svg+xml"
         else:
