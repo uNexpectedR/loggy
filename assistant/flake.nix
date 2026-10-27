@@ -1,0 +1,14 @@
+{
+  description = "Corner assistant for Logos Basecamp";
+
+  inputs = {
+    logos-module-builder.url = "github:logos-co/logos-module-builder/0.3.0";
+  };
+
+  outputs = inputs@{ logos-module-builder, ... }:
+    logos-module-builder.lib.mkLogosQmlModule {
+      src = ./.;
+      configFile = ./metadata.json;
+      flakeInputs = inputs;
+    };
+}

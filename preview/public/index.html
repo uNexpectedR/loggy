@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Corner assistant</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: grid;
+      grid-template-columns: 108px 1fr;
+      background: #e7e2d8;
+      color: #221f1a;
+      font: 16px/1.45 "Ubuntu", "Segoe UI", sans-serif;
+    }
+    aside {
+      background: #2a272f;
+      color: #f4efe6;
+      padding: 18px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .mark { font-size: 13px; letter-spacing: 0.04em; margin: 0 8px 12px; }
+    aside button, .run, .face {
+      font: inherit;
+      cursor: pointer;
+    }
+    aside button {
+      background: transparent;
+      color: inherit;
+      border: 0;
+      text-align: left;
+      padding: 8px;
+      border-radius: 8px;
+    }
+    aside button[aria-pressed="true"] { background: #403c4a; }
+    main { padding: 28px 32px 220px; }
+    h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px; }
+    .quiet { margin: 0 0 18px; max-width: 38rem; color: #4a453c; }
+    label { display: block; font-size: 14px; }
+    textarea {
+      display: block;
+      width: min(100%, 34rem);
+      margin-top: 6px;
+      padding: 10px;
+      border: 1px solid #d4cdc2;
+      border-radius: 10px;
+      background: #fbf8f3;
+      color: inherit;
+      font: inherit;
+      resize: vertical;
+    }
+    .assistant {
+      position: fixed;
+      right: 16px;
+      bottom: 10px;
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .bubble, .face { pointer-events: auto; }
+    .bubble {
+      position: relative;
+      width: min(280px, calc(100vw - 160px));
+      margin-bottom: 28px;
+      padding: 14px 14px 12px;
+      background: #fffaf3;
+      border: 1px solid #e4ddd2;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(30, 26, 22, 0.12);
+    }
+    .bubble::after {
+      content: "";
+      position: absolute;
+      right: -7px;
+      bottom: 28px;
+      border: 8px solid transparent;
+      border-left-color: #fffaf3;
+      border-right: 0;
+    }
+    .say { margin: 0; }
+    .detail {
+      margin: 8px 0 0;
+      white-space: pre-wrap;
+      font: 12px/1.4 ui-monospace, monospace;
+      color: #5c564c;
+    }
+    .run {
+      margin-top: 10px;
+      border: 0;
+      border-radius: 999px;
+      padding: 7px 14px;
+      background: #2a272f;
+      color: #f7f4ee;
+    }
+    .run:disabled { opacity: 0.55; cursor: default; }
+    .face {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      animation: bob 2.8s ease-in-out infinite;
+    }
+    .face img { display: block; width: 168px; height: auto; }
+    .face:focus-visible, .run:focus-visible, aside button:focus-visible, textarea:focus-visible {
+      outline: 2px solid #6d6788;
+      outline-offset: 2px;
+    }
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .face { animation: none; }
+    }
+    @media (max-width: 700px) {
+      body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      aside { flex-direction: row; align-items: center; padding: 10px; }
+      .mark { margin: 0 8px 0 4px; }
+      main { padding: 16px 16px 230px; }
+      .assistant { right: 8px; bottom: 6px; }
+      .face img { width: 104px; }
+      .bubble { width: min(210px, calc(100vw - 128px)); margin-bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <p class="mark">Basecamp</p>
+    <button type="button" id="workspace" aria-pressed="true">Workspace</button>
+    <button type="button" id="modules" aria-pressed="false">Modules</button>
+  </aside>
+  <main>
+    <h1 id="heading">Workspace</h1>
+    <p class="quiet" id="blurb">Preview shell. Basecamp itself is not running. This area still takes input.</p>
+    <label>Note
+      <textarea id="note" rows="5" placeholder="Write something. The corner does not take these keystrokes."></textarea>
+    </label>
+  </main>
+  <div class="assistant">
+    <div class="bubble" id="bubble">
+      <p class="say" id="say">Before anything else, run a Logos node.</p>
+      <pre class="detail" id="detail" hidden></pre>
+      <button type="button" class="run" id="run">Run a node</button>
+    </div>
+    <button type="button" class="face" id="face" aria-label="Assistant" aria-expanded="true" aria-controls="bubble">
+      <img src="/lambda.svg" alt="">
+    </button>
+  </div>
+  <script>
+    const say = document.querySelector("#say");
+    const detail = document.querySelector("#detail");
+    const run = document.querySelector("#run");
+    const bubble = document.querySelector("#bubble");
+    const face = document.querySelector("#face");
+    const heading = document.querySelector("#heading");
+    const blurb = document.querySelector("#blurb");
+    const note = document.querySelector("#note");
+    const pages = {
+      workspace: ["Workspace", "Preview shell. Basecamp itself is not running. This area still takes input."],
+      modules: ["Modules", "Nothing else loads from here. The assistant's only task is to run a node."]
+    };
+
+    function showPage(name) {
+      heading.textContent = pages[name][0];
+      blurb.textContent = pages[name][1];
+      document.querySelector("#workspace").setAttribute("aria-pressed", name === "workspace");
+      document.querySelector("#modules").setAttribute("aria-pressed", name === "modules");
+      note.parentElement.hidden = name !== "workspace";
+    }
+
+    document.querySelector("#workspace").addEventListener("click", () => showPage("workspace"));
+    document.querySelector("#modules").addEventListener("click", () => showPage("modules"));
+
+    face.addEventListener("click", () => {
+      const open = bubble.hidden;
+      bubble.hidden = !open;
+      face.setAttribute("aria-expanded", String(open));
+    });
+
+    run.addEventListener("click", async () => {
+      run.disabled = true;
+      say.textContent = "Running the node…";
+      detail.hidden = true;
+      detail.textContent = "";
+      try {
+        const res = await fetch("/api/run-node", { method: "POST" });
+        const body = await res.json();
+        say.textContent = body.summary || "The node did not start.";
+        detail.textContent = body.detail || "";
+        detail.hidden = !body.detail;
+        if (body.ok) run.hidden = true;
+        else run.textContent = "Try again";
+      } catch (error) {
+        say.textContent = "The node did not start.";
+        detail.hidden = false;
+        detail.textContent = String(error);
+        run.textContent = "Try again";
+      } finally {
+        run.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

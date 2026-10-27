@@ -1,0 +1,8 @@
+bin/
+data/
+*.AppImage
+user_config.yaml
+keystore.yaml
+__pycache__/
+result
+result-*
