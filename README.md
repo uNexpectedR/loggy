@@ -36,14 +36,14 @@ Keys and config stay in `data/logos-node` (gitignored). The script does not prin
 
 Inside Basecamp, `assistant/Main.qml` calls the same three methods on `blockchain_module` through `logos.callModule`. Package it with Nix from `assistant/` (`nix build`, module builder 0.3.0). That build is not run here.
 
-The published package is `corner_assistant` 0.1.2. It is QML only, so `main` is empty and the same files are in the portable `linux-amd64` and `darwin-arm64` variants. There is no native plugin. Install it in Basecamp from:
+The published package is `corner_assistant` 0.1.3. It is QML only, so `main` is empty and the same files are in the portable `linux-amd64` and `darwin-arm64` variants. There is no native plugin. Install it in Basecamp from:
 
 https://github.com/uNexpectedR/loggy/releases/download/corner_assistant-v0.1.0/logos-repo.json
 
-That catalogue lists 0.1.2. The package file is on the `corner_assistant-v0.1.2` release. Refresh the repository, then install Corner assistant 0.1.2.
+That catalogue lists 0.1.3. The package file is on the `corner_assistant-v0.1.3` release. Refresh the repository, then install Corner assistant 0.1.3.
 
 ## Real and stubbed
 
 Real: the `ui_qml` module, the `logos.callModule` methods, and the preview's `logosctl` / `blockchain_module` 0.3.2 run.
 
-Stubbed: the browser shell is not the Basecamp app, and the character is an SVG of the reference still, not a 3D view. The module view is transparent. In Basecamp the character is a frameless window above the shell, and only that window takes clicks. Drag it; the place lasts until the module is closed. The preview is where the rest of the window stays usable.
+Stubbed: the browser shell is not the Basecamp app, and the character is an SVG of the reference still, not a 3D view. In Basecamp the character is drawn in the content area. Drag it; the place lasts until the module is closed. Only the character and the bubble take clicks. A transparent clear paints black in this host, and the default clear is white, so the view uses Basecamp's content color (`#171717`) and paints no other page fill. The preview is where the rest of the window stays usable.

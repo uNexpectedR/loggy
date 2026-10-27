@@ -3,9 +3,9 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
-// The host view's clear color is white unless we set the window color.
-// The character is its own frameless window: it stays above Basecamp,
-// and only that window takes clicks.
+// Drawn inside the content view. A separate window never appeared, and
+// clearing this view to transparent paints black on macOS. The default
+// clear is white. Use Basecamp's own content color and paint nothing else.
 Item {
     id: root
     anchors.fill: parent
@@ -21,61 +21,49 @@ Item {
 
     readonly property string peers: "{\"initial_peers\":[\"/ip4/65.109.51.37/udp/3000/quic-v1/p2p/12D3KooWFrouXfmrR4nsLMtE7wu15DoMJ6VtoUtHinREZCvbWHar\",\"/ip4/65.109.51.37/udp/3001/quic-v1/p2p/12D3KooWJRGau8M1rjT7R5e4YYsgdFhsMX35nRDtMwCDjxQkXAHz\",\"/ip4/65.109.51.37/udp/3002/quic-v1/p2p/12D3KooWQXJavMDTRscjauFSgVAB1VLB6Rzpy2uY5SU9Tk7927tb\",\"/ip4/65.109.51.37/udp/50001/quic-v1/p2p/12D3KooWSQc7CcGtvWDPF1yCbBthFnQjprfCVHmfmNDUrSmqQsU1\"]}"
 
-    function clearHost() {
+    function matchShell() {
         var host = root.Window.window
         if (host)
-            host.color = "transparent"
+            host.color = "#171717"
     }
 
-    function settle() {
-        clearHost()
-        if (userMoved) {
-            if (posRight > 0) {
-                floater.anchorRight = posRight
-                floater.anchorBottom = posBottom
-            }
+    function place() {
+        if (width < 40 || height < 40)
+            return
+        if (!userMoved) {
+            assistant.anchorRight = width - 16
+            assistant.anchorBottom = height - 16
             return
         }
-        if (width < 40 || floater.width < 20)
-            return
-        var pt = mapToGlobal(width, height)
-        var sw = Screen.width
-        var sh = Screen.height
-        var right = pt.x
-        var bottom = pt.y
-        if (!(right > 40 && bottom > 40 && right < sw + floater.width && bottom < sh + floater.height)) {
-            right = sw
-            bottom = sh
-        }
-        floater.anchorRight = right - 16
-        floater.anchorBottom = bottom - 16
+        assistant.anchorRight = Math.max(64, Math.min(width - 8, posRight))
+        assistant.anchorBottom = Math.max(64, Math.min(height - 8, posBottom))
     }
 
-    Component.onCompleted: settle()
-    onWidthChanged: settle()
-    onHeightChanged: settle()
-    onWindowChanged: clearHost()
+    Component.onCompleted: {
+        matchShell()
+        place()
+    }
+    onWidthChanged: place()
+    onHeightChanged: place()
+    onWindowChanged: matchShell()
 
-    Window {
-        id: floater
-        flags: Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.NoDropShadowWindowHint
-        color: "transparent"
-        title: ""
-        visible: true
-        property real anchorRight: Screen.width - 16
-        property real anchorBottom: Screen.height - 16
+    Item {
+        id: assistant
+        z: 1
+        property real anchorRight: 16
+        property real anchorBottom: 16
+        width: row.implicitWidth
+        height: row.implicitHeight
         x: anchorRight - width
         y: anchorBottom - height
-        width: panel.implicitWidth
-        height: panel.implicitHeight
-        onWidthChanged: root.settle()
 
         Row {
-            id: panel
+            id: row
             spacing: 8
             layoutDirection: Qt.RightToLeft
 
             Item {
+                id: faceBox
                 width: 150
                 height: 196
                 Image {
@@ -87,7 +75,6 @@ Item {
                     source: "lambda.svg"
                     fillMode: Image.PreserveAspectFit
                     MouseArea {
-                        id: dragArea
                         anchors.fill: parent
                         hoverEnabled: true
                         preventStealing: true
@@ -98,36 +85,35 @@ Item {
                         property real originBottom: 0
                         property bool dragged: false
                         onPressed: function (mouse) {
-                            var g = mapToGlobal(mouse.x, mouse.y)
-                            grabX = g.x
-                            grabY = g.y
-                            originRight = floater.anchorRight
-                            originBottom = floater.anchorBottom
+                            var p = mapToItem(root, mouse.x, mouse.y)
+                            grabX = p.x
+                            grabY = p.y
+                            originRight = assistant.anchorRight
+                            originBottom = assistant.anchorBottom
                             dragged = false
                         }
                         onPositionChanged: function (mouse) {
                             if (!pressed)
                                 return
-                            var g = mapToGlobal(mouse.x, mouse.y)
-                            var dx = g.x - grabX
-                            var dy = g.y - grabY
+                            var p = mapToItem(root, mouse.x, mouse.y)
+                            var dx = p.x - grabX
+                            var dy = p.y - grabY
                             if (Math.abs(dx) > 4 || Math.abs(dy) > 4)
                                 dragged = true
                             if (!dragged)
                                 return
-                            floater.anchorRight = originRight + dx
-                            floater.anchorBottom = originBottom + dy
+                            assistant.anchorRight = originRight + dx
+                            assistant.anchorBottom = originBottom + dy
                         }
                         onReleased: {
                             if (!dragged) {
                                 root.open = !root.open
                                 return
                             }
-                            var faceSpan = 72
-                            floater.anchorRight = Math.max(faceSpan, Math.min(Screen.width - 8, floater.anchorRight))
-                            floater.anchorBottom = Math.max(faceSpan, Math.min(Screen.height - 8, floater.anchorBottom))
-                            root.posRight = floater.anchorRight
-                            root.posBottom = floater.anchorBottom
+                            assistant.anchorRight = Math.max(64, Math.min(root.width - 8, assistant.anchorRight))
+                            assistant.anchorBottom = Math.max(64, Math.min(root.height - 8, assistant.anchorBottom))
+                            root.posRight = assistant.anchorRight
+                            root.posBottom = assistant.anchorBottom
                             root.userMoved = true
                         }
                         onCanceled: dragged = false
