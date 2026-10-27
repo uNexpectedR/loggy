@@ -1,7 +1,7 @@
 {
   "name": "corner_assistant",
   "display_name": "Corner assistant",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "type": "ui_qml",
   "category": "assistant",
   "description": "A corner assistant whose first task is to run a Logos blockchain node.",

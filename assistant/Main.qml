@@ -168,19 +168,22 @@ Item {
                     width: 220
                     spacing: 8
                     Text {
-                        width: column.width
+                        id: speechText
+                        width: 220
                         wrapMode: Text.Wrap
                         text: root.speech
                         color: "#221f1a"
                         font.pixelSize: 15
+                        height: contentHeight
                     }
                     Text {
-                        width: column.width
+                        width: 220
                         wrapMode: Text.Wrap
                         visible: text !== ""
                         text: root.detail
                         color: "#5c564c"
                         font.pixelSize: 12
+                        height: contentHeight
                     }
                     Button {
                         visible: !root.done
@@ -193,66 +196,167 @@ Item {
         }
     }
 
-    function quotedValue(text, name) {
-        var mark = '"' + name + '"'
+    function skipSpace(text, i) {
+        while (i < text.length && " \n\t\r".indexOf(text.charAt(i)) !== -1)
+            i++
+        return i
+    }
+
+    function unescapeJsonString(text) {
+        var out = ""
+        var i = 1
+        while (i < text.length) {
+            var c = text.charAt(i)
+            if (c === '"')
+                return out
+            if (c === "\\") {
+                i++
+                if (i >= text.length)
+                    break
+                var e = text.charAt(i)
+                if (e === "n")
+                    out += "\n"
+                else if (e === "t")
+                    out += "\t"
+                else if (e === "r")
+                    out += "\r"
+                else if (e === "u") {
+                    var code = parseInt(text.slice(i + 1, i + 5), 16)
+                    if (!isNaN(code))
+                        out += String.fromCharCode(code)
+                    i += 4
+                } else
+                    out += e
+            } else
+                out += c
+            i++
+        }
+        return out
+    }
+
+    function chainPayload(raw) {
+        var text = ""
+        if (raw !== null && typeof raw === "object") {
+            try {
+                text = JSON.stringify(raw)
+            } catch (error) {
+                text = String(raw)
+            }
+        } else
+            text = String(raw)
+        var mark = '"value"'
         var at = text.indexOf(mark)
         if (at < 0)
-            return ""
+            return text
         var rest = text.slice(at + mark.length)
         var colon = rest.indexOf(":")
         if (colon < 0)
+            return text
+        var i = skipSpace(rest, colon + 1)
+        if (rest.charAt(i) === '"')
+            return unescapeJsonString(rest.slice(i))
+        if (rest.charAt(i) === "{")
+            return rest.slice(i)
+        return text
+    }
+
+    function keyAt(text, name, from) {
+        var mark = '"' + name + '"'
+        var at = text.indexOf(mark, from)
+        while (at >= 0) {
+            var prev = at > 0 ? text.charAt(at - 1) : ""
+            var ident = (prev >= "0" && prev <= "9") || (prev >= "A" && prev <= "Z") || (prev >= "a" && prev <= "z") || prev === "_"
+            if (!ident)
+                return at
+            at = text.indexOf(mark, at + mark.length)
+        }
+        return -1
+    }
+
+    function quotedValue(text, name) {
+        var at = keyAt(text, name, 0)
+        if (at < 0)
             return ""
-        rest = rest.slice(colon + 1)
-        var i = 0
-        while (i < rest.length && " \n\t\r".indexOf(rest.charAt(i)) !== -1)
-            i++
-        rest = rest.slice(i)
-        if (rest.charAt(0) !== '"')
+        var rest = text.slice(at + name.length + 2)
+        var colon = rest.indexOf(":")
+        if (colon < 0)
             return ""
-        var end = rest.indexOf('"', 1)
-        if (end < 1)
+        var i = skipSpace(rest, colon + 1)
+        if (rest.charAt(i) !== '"')
             return ""
-        return rest.slice(1, end)
+        var end = rest.indexOf('"', i + 1)
+        if (end < i + 1)
+            return ""
+        return rest.slice(i + 1, end)
     }
 
     function numberValue(text, name) {
-        var mark = '"' + name + '"'
-        var at = text.indexOf(mark)
-        if (at < 0)
-            return ""
-        var rest = text.slice(at + mark.length)
-        var colon = rest.indexOf(":")
-        if (colon < 0)
-            return ""
-        rest = rest.slice(colon + 1)
-        var i = 0
-        while (i < rest.length && " \n\t\r".indexOf(rest.charAt(i)) !== -1)
-            i++
-        var num = ""
-        if (rest.charAt(i) === "-") {
-            num = "-"
-            i++
+        var from = 0
+        while (from < text.length) {
+            var at = keyAt(text, name, from)
+            if (at < 0)
+                return ""
+            var rest = text.slice(at + name.length + 2)
+            var colon = rest.indexOf(":")
+            if (colon < 0)
+                return ""
+            var i = skipSpace(rest, colon + 1)
+            if (rest.charAt(i) === '"')
+                i = skipSpace(rest, i + 1)
+            var num = ""
+            if (rest.charAt(i) === "-") {
+                num = "-"
+                i++
+            }
+            var start = i
+            while (i < rest.length && rest.charAt(i) >= "0" && rest.charAt(i) <= "9")
+                i++
+            if (i !== start)
+                return num + rest.slice(start, i)
+            from = at + name.length + 2
         }
-        var start = i
-        while (i < rest.length && rest.charAt(i) >= "0" && rest.charAt(i) <= "9")
-            i++
-        if (i === start)
-            return ""
-        return num + rest.slice(start, i)
+        return ""
+    }
+
+    function statusWord(text) {
+        var mode = quotedValue(text, "mode").toLowerCase()
+        if (mode === "")
+            mode = quotedValue(text, "state").toLowerCase()
+        if (mode.indexOf("online") !== -1)
+            return "online"
+        if (mode.indexOf("bootstrap") !== -1)
+            return "bootstrapping"
+        if (mode.indexOf("notstart") !== -1)
+            return "notstarted"
+        var lower = text.toLowerCase()
+        if (lower.indexOf('"online"') !== -1)
+            return "online"
+        if (lower.indexOf('"bootstrapping"') !== -1)
+            return "bootstrapping"
+        return ""
     }
 
     function chainRunning(text) {
-        return numberValue(text, "height") !== "" || text.indexOf("Bootstrapping") !== -1 || text.indexOf("Online") !== -1
+        if (text.indexOf('"success":false') !== -1 || text.indexOf('"success": false') !== -1)
+            return false
+        var body = chainPayload(text)
+        var word = statusWord(body)
+        if (word === "notstarted")
+            return false
+        if (word === "online" || word === "bootstrapping")
+            return true
+        return numberValue(body, "height") !== ""
     }
 
     function statusSentence(info) {
-        var mode = quotedValue(info, "mode").toLowerCase()
-        var height = numberValue(info, "height")
-        var slot = numberValue(info, "slot")
+        var body = chainPayload(info)
+        var word = statusWord(body)
+        var height = numberValue(body, "height")
+        var slot = numberValue(body, "slot")
         var lead = "The node is running."
-        if (mode.indexOf("online") !== -1)
+        if (word === "online")
             lead = "The node is online."
-        else if (mode.indexOf("bootstrap") !== -1)
+        else if (word === "bootstrapping")
             lead = "The node is bootstrapping."
         if (height === "" && slot === "")
             return lead
