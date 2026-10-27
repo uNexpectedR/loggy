@@ -3,12 +3,9 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Window 2.15
 
-// The photo is the character. Nothing is drawn behind it.
-// This view is a QQuickWidget inside the Basecamp dock, not a cocoa window.
-// FramelessWindowHint + NoDropShadowWindowHint + a clear color is what makes a
-// real NSWindow translucent. On this widget a clear color composites as black
-// (0.1.2) and Qt.Tool hid the child window. A solid clear is the full page, so
-// the page matches the shell (#171717) and the root item is not filled.
+// The photo is the character, at the camera's resolution. Nothing is drawn
+// behind it. A clear color on this QQuickWidget paints black, so the window
+// clear is Basecamp's content color and the root item is not filled.
 Item {
     id: root
     anchors.fill: parent
@@ -26,10 +23,16 @@ Item {
 
     function matchShell() {
         var host = root.Window.window
-        if (!host)
-            return
-        // Opaque shell color. A clear color on this widget is a black page.
-        host.color = "#171717"
+        if (host)
+            host.color = "#171717"
+    }
+
+    // Keep the clear on the shell color. Do not put a rectangle behind the photo.
+    Binding {
+        target: root.Window.window
+        property: "color"
+        value: "#171717"
+        when: root.Window.window !== null
     }
 
     function place() {
@@ -69,8 +72,8 @@ Item {
 
             Item {
                 id: faceBox
-                width: 168
-                height: 214
+                width: 326
+                height: 388
                 property real hop: 0
 
                 SequentialAnimation on hop {
@@ -94,8 +97,8 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: faceBox.hop
-                    width: 168
-                    height: 198
+                    width: 326
+                    height: 380
                     source: "lambda.png"
                     fillMode: Image.PreserveAspectFit
                     smooth: true
