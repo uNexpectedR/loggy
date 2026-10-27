@@ -1,55 +1,56 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400">
-  <style>
-    .eye { transform-box: fill-box; transform-origin: center; animation: blink 5.2s infinite; }
-    .eye.right { animation-delay: 0.07s; }
-    @keyframes blink {
-      0%, 86%, 100% { transform: scaleY(1); }
-      91% { transform: scaleY(0.07); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .eye { animation: none; }
-    }
-  </style>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 540">
   <defs>
-    <linearGradient id="plastic" x1="8%" y1="0%" x2="92%" y2="100%">
-      <stop offset="0%" stop-color="#ddd9ea"/>
-      <stop offset="22%" stop-color="#c4bfd4"/>
-      <stop offset="48%" stop-color="#a09cb4"/>
-      <stop offset="76%" stop-color="#7c788e"/>
-      <stop offset="100%" stop-color="#4e4b5d"/>
+    <linearGradient id="tube" x1="12%" y1="0%" x2="88%" y2="100%">
+      <stop offset="0%" stop-color="#f4f2f8"/>
+      <stop offset="18%" stop-color="#d5d1e2"/>
+      <stop offset="46%" stop-color="#9b97ad"/>
+      <stop offset="74%" stop-color="#645f76"/>
+      <stop offset="100%" stop-color="#3a3848"/>
     </linearGradient>
-    <radialGradient id="ball" cx="34%" cy="30%" r="70%">
+    <radialGradient id="eye" cx="36%" cy="30%" r="72%">
       <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="60%" stop-color="#f4f4f6"/>
-      <stop offset="100%" stop-color="#c6c6ce"/>
+      <stop offset="58%" stop-color="#f6f6f8"/>
+      <stop offset="100%" stop-color="#c2c2cb"/>
     </radialGradient>
-    <radialGradient id="pupil" cx="32%" cy="28%" r="72%">
-      <stop offset="0%" stop-color="#4a4a4a"/>
-      <stop offset="42%" stop-color="#141414"/>
+    <radialGradient id="pupil" cx="32%" cy="28%" r="74%">
+      <stop offset="0%" stop-color="#4d4d4d"/>
+      <stop offset="38%" stop-color="#111111"/>
       <stop offset="100%" stop-color="#000000"/>
     </radialGradient>
   </defs>
-  <ellipse cx="168" cy="384" rx="96" ry="8" fill="#1b1922" opacity="0.16"/>
-  <g fill="none" stroke="url(#plastic)" stroke-width="48" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M164 200 C130 250 88 300 52 348"/>
-    <path d="M248 348 C210 372 174 340 168 300 L164 200 C156 145 168 95 124 64 C80 34 48 64 64 28"/>
+  <ellipse cx="214" cy="512" rx="132" ry="11" fill="#1b1924" opacity="0.18"/>
+  <g fill="none" stroke="#241f2e" stroke-opacity="0.2" stroke-width="66" stroke-linecap="round" stroke-linejoin="round" transform="translate(7,11)">
+    <path d="M124 96 C92 42 158 14 210 48 C248 74 230 124 214 176 C204 214 200 246 206 286"/>
+    <path d="M206 286 C210 352 196 424 172 466 C152 500 204 524 258 508 C312 492 346 450 326 406"/>
+    <path d="M214 246 C168 300 108 386 62 458"/>
   </g>
-  <g fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="8" stroke-linecap="round">
-    <path d="M146 224 C118 262 86 304 64 334"/>
-    <path d="M156 270 L158 176"/>
+  <g fill="none" stroke="url(#tube)" stroke-width="62" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M124 96 C92 42 158 14 210 48 C248 74 230 124 214 176 C204 214 200 246 206 286"/>
+    <path d="M206 286 C210 352 196 424 172 466 C152 500 204 524 258 508 C312 492 346 450 326 406"/>
+    <path d="M214 246 C168 300 108 386 62 458"/>
   </g>
-  <g class="eye">
-    <circle cx="132" cy="148" r="30" fill="url(#ball)"/>
-    <circle cx="122" cy="152" r="13" fill="url(#pupil)"/>
-    <circle cx="116" cy="144" r="5" fill="#ffffff"/>
+  <g fill="none" stroke="#2a2733" stroke-opacity="0.22" stroke-width="16" stroke-linecap="round" transform="translate(12,16)">
+    <path d="M124 96 C92 42 158 14 210 48 C248 74 230 124 214 176 C204 214 200 246 206 286"/>
+    <path d="M206 286 C210 352 196 424 172 466 C152 500 204 524 258 508 C312 492 346 450 326 406"/>
+    <path d="M214 246 C168 300 108 386 62 458"/>
   </g>
-  <g class="eye right">
-    <circle cx="196" cy="142" r="30" fill="url(#ball)"/>
-    <circle cx="186" cy="146" r="13" fill="url(#pupil)"/>
-    <circle cx="180" cy="138" r="5" fill="#ffffff"/>
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.42" stroke-width="11" stroke-linecap="round" transform="translate(-9,-12)">
+    <path d="M124 96 C92 42 158 14 210 48 C248 74 230 124 214 176 C204 214 200 246 206 286"/>
+    <path d="M206 286 C210 352 196 424 172 466 C152 500 204 524 258 508 C312 492 346 450 326 406"/>
+    <path d="M214 246 C168 300 108 386 62 458"/>
   </g>
-  <g fill="none" stroke="#14121a" stroke-width="5" stroke-linecap="round">
-    <path d="M104 108 C120 98 140 100 154 112"/>
-    <path d="M168 102 C190 90 214 92 232 108"/>
+  <g>
+    <circle cx="176" cy="156" r="36" fill="url(#eye)"/>
+    <circle cx="166" cy="162" r="15" fill="url(#pupil)"/>
+    <circle cx="158" cy="152" r="6" fill="#ffffff"/>
+  </g>
+  <g>
+    <circle cx="248" cy="148" r="36" fill="url(#eye)"/>
+    <circle cx="238" cy="154" r="15" fill="url(#pupil)"/>
+    <circle cx="230" cy="144" r="6" fill="#ffffff"/>
+  </g>
+  <g fill="none" stroke="#14121a" stroke-width="5.5" stroke-linecap="round">
+    <path d="M142 112 C162 98 186 100 204 116"/>
+    <path d="M214 104 C238 88 266 90 290 110"/>
   </g>
 </svg>

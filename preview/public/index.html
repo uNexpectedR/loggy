@@ -60,7 +60,7 @@
       display: flex;
       align-items: flex-end;
       gap: 2px;
-      z-index: 2;
+      z-index: 30;
       pointer-events: none;
     }
     .bubble, .face { pointer-events: auto; }
@@ -103,8 +103,12 @@
       border: 0;
       padding: 0;
       background: transparent;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
       animation: bob 2.8s ease-in-out infinite;
     }
+    .face.dragging { cursor: grabbing; animation: none; }
     .face img { display: block; width: 168px; height: auto; }
     .face:focus-visible, .run:focus-visible, aside button:focus-visible, textarea:focus-visible {
       outline: 2px solid #6d6788;
@@ -148,7 +152,7 @@
       <button type="button" class="run" id="run">Run a node</button>
     </div>
     <button type="button" class="face" id="face" aria-label="Assistant" aria-expanded="true" aria-controls="bubble">
-      <img src="/lambda.svg" alt="">
+      <img src="/lambda.svg" alt="" draggable="false">
     </button>
   </div>
   <script>
@@ -157,6 +161,7 @@
     const run = document.querySelector("#run");
     const bubble = document.querySelector("#bubble");
     const face = document.querySelector("#face");
+    const assistant = document.querySelector(".assistant");
     const heading = document.querySelector("#heading");
     const blurb = document.querySelector("#blurb");
     const note = document.querySelector("#note");
@@ -176,7 +181,73 @@
     document.querySelector("#workspace").addEventListener("click", () => showPage("workspace"));
     document.querySelector("#modules").addEventListener("click", () => showPage("modules"));
 
-    face.addEventListener("click", () => {
+    let drag = null;
+    let suppressClick = false;
+
+    function clampAssistant() {
+      const rect = assistant.getBoundingClientRect();
+      const left = Math.max(8, Math.min(rect.left, window.innerWidth - 48));
+      const top = Math.max(8, Math.min(rect.top, window.innerHeight - 48));
+      assistant.style.right = "auto";
+      assistant.style.bottom = "auto";
+      assistant.style.left = left + "px";
+      assistant.style.top = top + "px";
+    }
+
+    face.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      const rect = assistant.getBoundingClientRect();
+      drag = {
+        id: event.pointerId,
+        dx: event.clientX - rect.left,
+        dy: event.clientY - rect.top,
+        x: event.clientX,
+        y: event.clientY,
+        moved: false
+      };
+      face.classList.add("dragging");
+      face.setPointerCapture(event.pointerId);
+    });
+
+    face.addEventListener("pointermove", (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) drag.moved = true;
+      if (!drag.moved) return;
+      assistant.style.right = "auto";
+      assistant.style.bottom = "auto";
+      assistant.style.left = (event.clientX - drag.dx) + "px";
+      assistant.style.top = (event.clientY - drag.dy) + "px";
+    });
+
+    face.addEventListener("pointerup", (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const moved = drag.moved;
+      drag = null;
+      face.classList.remove("dragging");
+      suppressClick = true;
+      if (!moved) {
+        const open = bubble.hidden;
+        bubble.hidden = !open;
+        face.setAttribute("aria-expanded", String(open));
+        return;
+      }
+      clampAssistant();
+    });
+
+    face.addEventListener("pointercancel", () => {
+      drag = null;
+      face.classList.remove("dragging");
+    });
+
+    face.addEventListener("click", (event) => {
+      if (suppressClick) {
+        suppressClick = false;
+        event.preventDefault();
+        return;
+      }
       const open = bubble.hidden;
       bubble.hidden = !open;
       face.setAttribute("aria-expanded", String(open));
