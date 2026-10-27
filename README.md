@@ -36,6 +36,12 @@ Keys and config stay in `data/logos-node` (gitignored). The script does not prin
 
 Inside Basecamp, `assistant/Main.qml` calls the same three methods on `blockchain_module` through `logos.callModule`. Package it with Nix from `assistant/` (`nix build`, module builder 0.3.0). That build is not run here.
 
+The published package is `corner_assistant` 0.1.1. It is QML only, so `main` is empty and the same files are in the portable `linux-amd64` and `darwin-arm64` variants. There is no native plugin. Install it in Basecamp from:
+
+https://github.com/uNexpectedR/loggy/releases/download/corner_assistant-v0.1.0/logos-repo.json
+
+That catalogue lists 0.1.1. The package file is on the `corner_assistant-v0.1.1` release.
+
 ## Real and stubbed
 
 Real: the `ui_qml` module, the `logos.callModule` methods, and the preview's `logosctl` / `blockchain_module` 0.3.2 run.
